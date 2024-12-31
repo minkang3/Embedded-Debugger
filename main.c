@@ -36,6 +36,8 @@ void send_data(uint16_t data, uint8_t len);
 void send_data_lsb(uint16_t data, uint8_t len);
 void send_swd_packet(swd_req);
 
+void wait_for_button();
+
 void initialize_swd();
 
 
@@ -49,9 +51,7 @@ int main(void) {
     stdio_init_all();
     setup();
 
-    gpio_put(PICO_DEFAULT_LED_PIN, 1);
-    while (gpio_get(BUTTON_PIN) == 1);
-    gpio_put(PICO_DEFAULT_LED_PIN, 0);
+    wait_for_button();
 
     initialize_swd();
 
@@ -71,6 +71,16 @@ int main(void) {
 
     while (1);
 }
+
+// Misc Helpers {{{
+
+void wait_for_button() {
+    gpio_put(PICO_DEFAULT_LED_PIN, 1);
+    while (gpio_get(BUTTON_PIN) == 1);
+    gpio_put(PICO_DEFAULT_LED_PIN, 0);
+}
+
+// }}}
 
 // Setup functions {{{
 void pin_setup() {

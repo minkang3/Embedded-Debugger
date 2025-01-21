@@ -1,2 +1,4 @@
 .cache/clangd/index
 build
+assembly/
+.DS_Store

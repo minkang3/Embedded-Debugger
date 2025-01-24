@@ -37,7 +37,11 @@ pico_sdk_init()
 
 # Add executable. Default name is the project name, version 0.1
 
-add_executable(debugger main.c )
+file(GLOB_RECURSE sources
+    "${CMAKE_SOURCE_DIR}/src/*.c"
+)
+
+add_executable(debugger ${sources} )
 
 pico_set_program_name(debugger "debugger")
 pico_set_program_version(debugger "0.1")
@@ -57,4 +61,7 @@ target_include_directories(debugger PRIVATE
 
 #pico_enable_stdio_usb(debugger 1)
 pico_add_extra_outputs(debugger)
+
+
+target_include_directories(debugger PUBLIC ${CMAKE_SOURCE_DIR}/inc)
 

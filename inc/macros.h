@@ -1,6 +1,18 @@
 #ifndef MACROS_H
 #define MACROS_H
 
+#define BUF_LEN 64
+
+#define CORE_DHCSR 0xe000edf0
+#define CORE_DCRDR 0xe000edf8
+#define CORE_DCRSR 0xe000edf4
+#define CORE_DEMCR 0xe000edfc 
+
+#define CORE_VTOR 0xe000ed08
+#define NVIC_AIRCR 0xe000ed0c
+
+
+
 #define CLOCK_DELAY 100
 #define DELAY_MS 3
 #define SMALL_DELAY_MS 10

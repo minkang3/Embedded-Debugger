@@ -1,38 +1,42 @@
-#include "core.h"
+/**
+ * @file mem.c
+ * @author Min Kang
+ * @brief Functions to write and read to debug core registers
+ */
+#include "mem.h"
 #include "data_transfer.h"
 #include "utils.h"
+#include "macros.h"
 #include <stdio.h>
 
-// Core Functions {{{
-
-uint8_t SWD_core_single_read(uint32_t addr, uint32_t* data) {
+/**
+ * @brief Read from address of TARGET
+ *
+ * @param addr Register to read from
+ * @param data Pointer to data you want to read to
+ *
+ * @return ACK of request
+ */
+uint8_t mem_read(uint32_t addr, uint32_t* data) {
     uint8_t ack;
     // ------ Write to CSW of MEM-AP ----- //
-    // Disable auto increment
-    if ((ack = SWD_AP_write(0b00, 0x22000012)) != 1) {
-        error("Error in CSW write");
-        return ack;
-    }
+    // Enable auto increment
+	ack = SWD_AP_write(0b00, 0x22000012);
+	CHECK_ACK_RT("Failed reading core while writing to CSW");
     delay();
 
     // Write to TAR to set address to read from
-    if ((ack = SWD_AP_write(0b10, addr)) != 1) {
-        error("Bad ACK in SWD core single read");
-        return ack;
-    }
+	ack = SWD_AP_write(0b10, addr);
+	CHECK_ACK_RT("Failed setting target address while reading core");
     delay();
 
     // Read from DRW and handle WAIT ACK
     if ((ack = SWD_AP_read(0b11, data)) == 0b010) {
+		// First read returns nothing of use
         ack = SWD_DP_read(0b11, data);
-        if (ack != 1) {
-            error("Error");
-            return ack;
-        }
-        // HACK Handle corrupted read on first AP-read of TARGET
-        //printf("Handling corrupted read\n");
+		CHECK_ACK_RT("Bad ACK while reading core");
         ack = SWD_AP_read(0b11, data);
-        //return ack;
+		CHECK_ACK_RT("Bad ACK while reading core");
         if ((ack = SWD_DP_read(0b11, data)) != 1) {
             error("Bad ACK in SWD_core_single_read while reading from RDBUFF");
             return ack;
@@ -45,10 +49,19 @@ uint8_t SWD_core_single_read(uint32_t addr, uint32_t* data) {
     return ack;
 }
 
-uint8_t SWD_core_single_read_pf(uint32_t addr, uint32_t* data, char* reg_name) {
+/**
+ * @brief Read from address of TARGET while printing debug messages
+ *
+ * @param addr Register to read from
+ * @param data Pointer to data you want to read to
+ * @param reg_name Name of register for print statement
+ *
+ * @return ACK of request
+ */
+uint8_t mem_read_db(uint32_t addr, uint32_t* data, char* reg_name) {
     uint8_t ack;
     // ------ Write to CSW of MEM-AP ----- //
-    // Disable auto increment
+    // Enable auto increment
     if ((ack = SWD_AP_write(0b00, 0x22000012)) != 1) {
         error("Error in CSW write");
         return ack;
@@ -87,7 +100,15 @@ uint8_t SWD_core_single_read_pf(uint32_t addr, uint32_t* data, char* reg_name) {
     return ack;
 }
 
-uint8_t SWD_core_single_write(uint32_t addr, uint32_t data) {
+/**
+ * @brief Write to address of TARGET
+ *
+ * @param addr Address to write to
+ * @param data Data to write
+ *
+ * @return ACK of request
+ */
+uint8_t mem_write(uint32_t addr, uint32_t data) {
     uint8_t ack;
     if ((ack = SWD_AP_write(0b10, addr)) != 1) {
         error ("Bad ACK in SWD_core_single_write");
@@ -101,7 +122,16 @@ uint8_t SWD_core_single_write(uint32_t addr, uint32_t data) {
     return ack;
 }
 
-uint8_t SWD_core_single_write_pf(uint32_t addr, uint32_t data, char* reg_name) {
+/**
+ * @brief Write to address of TARGET while printing debug messages
+ *
+ * @param addr Address to write to
+ * @param data Data to write
+ * @param reg_name Name of register for print statements
+ *
+ * @return ACK of request
+ */
+uint8_t mem_write_db(uint32_t addr, uint32_t data, char* reg_name) {
     uint8_t ack;
     if ((ack = SWD_AP_write(0b10, addr)) != 1) {
         error ("Bad ACK in SWD_core_single_write");
@@ -116,4 +146,3 @@ uint8_t SWD_core_single_write_pf(uint32_t addr, uint32_t data, char* reg_name) {
     delay();
     return ack;
 }
-// }}}

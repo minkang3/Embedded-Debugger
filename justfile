@@ -18,3 +18,5 @@ flash:
 
 reboot:
     picotool reboot -f
+    sleep 1.2
+    just uart

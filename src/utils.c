@@ -128,50 +128,50 @@ uint8_t single_cmp(char* str, char c) {
  * @return 1 for error, 0 for success
  */
 uint8_t tokenize(char* buf, uint8_t buf_max_len, char** tokens, int8_t token_max_len, uint8_t* num_tokens) {
-	if (token_max_len < 1 || buf_max_len < 1) return 1;
-	*num_tokens = 0;
-	*tokens++ = buf; ++(*num_tokens);
-	uint8_t i = 0;
-	while (*buf != '\0' && i < buf_max_len && *num_tokens < token_max_len) {
-		++buf; ++i;
-		while (*buf == ' ') {
-			*buf = '\0';
-			++buf; ++i;
-			if (*buf != ' ') {
-				*tokens++ = buf; ++(*num_tokens);
-			}
-		}
-	}
-	*tokens = NULL;
-	return 0;
+    if (token_max_len < 1 || buf_max_len < 1) return 1;
+    *num_tokens = 0;
+    *tokens++ = buf; ++(*num_tokens);
+    uint8_t i = 0;
+    while (*buf != '\0' && i < buf_max_len && *num_tokens < token_max_len) {
+        ++buf; ++i;
+        while (*buf == ' ') {
+            *buf = '\0';
+            ++buf; ++i;
+            if (*buf != ' ') {
+                *tokens++ = buf; ++(*num_tokens);
+            }
+        }
+    }
+    *tokens = NULL;
+    return 0;
 }
 
 int power(int base, int pow) {
     int result = base;
-	if (pow == 0) return 1;
-	while (--pow) {
-		result *= base;
-	}
-	return result;
+    if (pow == 0) return 1;
+    while (--pow) {
+        result *= base;
+    }
+    return result;
 }
 
 int8_t parse_char_to_hex(char c) {
-	if (c >= '0' && c <= '9') return c - '0';
-	if (c >= 'a' && c <= 'f') return c - 'a' + 10;
-	if (c >= 'A' && c <= 'F') return c - 'A' + 10;
-	return -1;
+    if (c >= '0' && c <= '9') return c - '0';
+    if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+    if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+    return -1;
 }
 
 int parse_str_to_hex(char* str, uint32_t* hex) {
-	int val;
-	if (*str != '0' && *(str+1) != 'x') return 1;
-	*hex = 0;
-	str += 2;
-	for (uint8_t i = 0; i < 8; ++i) {
-		if (str[i] == '\0') return 1;
-		val = parse_char_to_hex(str[i]);
-		if (val < 0) return 1;
-		*hex += power(16, 7 - i) * val;
-	}
-	return 0;
+    int val;
+    if (*str != '0' && *(str+1) != 'x') return 1;
+    *hex = 0;
+    str += 2;
+    for (uint8_t i = 0; i < 8; ++i) {
+        if (str[i] == '\0') return 1;
+        val = parse_char_to_hex(str[i]);
+        if (val < 0) return 1;
+        *hex += power(16, 7 - i) * val;
+    }
+    return 0;
 }

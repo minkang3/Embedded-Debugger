@@ -2,6 +2,7 @@
 #define MACROS_H
 
 #define BUF_LEN 64
+#define TOKENS_LEN 16
 
 #define CORE_DHCSR 0xe000edf0
 #define CORE_DCRDR 0xe000edf8

@@ -1,5 +1,5 @@
 /**
- * @file debug.h
+ * @file debug_interface.h
  * @author Min Kang
  * @brief Debug interface headers
  */
@@ -11,9 +11,10 @@
 /**
  * @brief Print help menu
  */
-void show_help();
+uint8_t show_help();
 
-void debug_initialize_swd();
+// TODO: Add Documentation
+uint8_t debug_initialize_swd();
 
 /**
  * @brief Show debug status
@@ -89,10 +90,10 @@ uint8_t load_file(unsigned char* bin_arr, unsigned int bin_len);
  */
 uint8_t init_file_execution(uint32_t pc, uint32_t msp);
 
-uint8_t load_file_and_run(char* buf);
+uint8_t load_file_and_run(char** args, uint8_t num_args);
 
 uint8_t set_mem(uint32_t address, uint32_t value);
-uint8_t interface_set_mem(char* buf);
+uint8_t interface_set_mem(char** args, uint8_t num_args);
 uint8_t read_mem(uint32_t address, uint32_t* data);
-uint8_t interface_read_mem(char* buf);
+uint8_t interface_read_mem(char** args, uint8_t num_args);
 #endif

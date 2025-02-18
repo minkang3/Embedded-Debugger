@@ -1,9 +1,10 @@
 /**
- * @file debug.c
+ * @file debug_interface.c
  * @author Min Kang
- * @brief Provides debug interface
+ * @brief Debug interface
  */
-#include "debug.h"
+#include "debug_interface.h"
+#include "swd_init.h"
 #include "mem.h"
 #include "macros.h"
 #include "utils.h"
@@ -17,9 +18,9 @@
 /**
  * @brief Print help menu
  */
-void show_help() {
+uint8_t show_help() {
     printf("DEBUG HELP:\n\n");
-    printf("    init - Initialize SWD Debug (Must be run first)");
+    printf("    init - Initialize SWD Debug (Must be run first)\n");
     printf("    status - Show debug status\n");
     printf("    halt - Halt core\n");
     printf("    reset - Reset core\n");
@@ -31,7 +32,7 @@ void show_help() {
     printf("    read <address> - set a value from memory address\n");
 }
 
-void debug_initialize_swd() {
+uint8_t debug_initialize_swd() {
     uint8_t ack;
     initialize_swd();
     ack = setup_dp_and_mem_ap();
@@ -120,6 +121,8 @@ uint8_t reset_core() {
     // Check status
     ack = mem_read(CORE_DHCSR, &data);
     CHECK_ACK_RT("Failed reading status after reset");
+
+    printf("Successfully reset core\n");
 }
 
 /**
@@ -149,7 +152,9 @@ uint8_t single_step() {
     uint32_t data; uint8_t ack;
     ack = mem_write(CORE_DHCSR, 0xa05f0005);
     CHECK_ACK_RT("Failed single stepping");
+    delay();
     read_pc();
+    delay();
     return ack;
 }
 
@@ -249,13 +254,13 @@ uint8_t init_file_execution(uint32_t pc, uint32_t msp) {
     return 1;
 }
 
-uint8_t load_file_and_run(char* buf) {
+uint8_t load_file_and_run(char** args, uint8_t num_args) {
     unsigned char* bin_arr;
     unsigned int bin_len;
-    if (!strncmp(buf + 5, "blink", 5)) {
+    if (!strncmp(args[1], "blink", 5)) {
         bin_arr = blink_bin;
         bin_len = blink_bin_len;
-    } else if (!strncmp(buf + 5, "simple", 5)) {
+    } else if (!strncmp(args[1], "simple", 5)) {
         bin_arr = simple_bin;
         bin_len = simple_bin_len;
     } else {
@@ -281,19 +286,16 @@ uint8_t set_mem(uint32_t address, uint32_t value) {
     return 1;
 }
 
-uint8_t interface_set_mem(char* buf) {
-    char* tokens[10];
-    uint8_t num_tokens = 0;
+uint8_t interface_set_mem(char** args, uint8_t num_args) {
     uint32_t addr, val;
     int err = 0;
-    tokenize(buf, BUF_LEN, tokens, 10, &num_tokens);
-    if (num_tokens != 3) {
+    if (num_args != 3) {
             printf("Incorrect number of arguments. Format should be:\n");
             printf("set <address> <value>\n");
             return 1;
     }
-    err += parse_str_to_hex(tokens[1], &addr);
-    err += parse_str_to_hex(tokens[2], &val);
+    err += parse_str_to_hex(args[1], &addr);
+    err += parse_str_to_hex(args[2], &val);
     if (err) {
             printf("Incorrect format. Address and val should be in hex format like 0x12341234\n");
             return 1;
@@ -319,18 +321,15 @@ uint8_t read_mem(uint32_t address, uint32_t* data) {
     delay();
 }
 
-uint8_t interface_read_mem(char* buf) {
-    char* tokens[10];
-    uint8_t num_tokens = 0;
+uint8_t interface_read_mem(char** args, uint8_t num_args) {
     uint32_t addr, val;
     int err = 0;
-    tokenize(buf, BUF_LEN, tokens, 10, &num_tokens);
-    if (num_tokens != 2) {
+    if (num_args != 2) {
         printf("Incorrect number of arguments. Format should be:\n");
         printf("read <address>\n");
         return 1;
     }
-    err += parse_str_to_hex(tokens[1], &addr);
+    err += parse_str_to_hex(args[1], &addr);
     if (err) {
         printf("Incorrect format. Address should be in hex format like 0x12341234\n");
         return 1;

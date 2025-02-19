@@ -10,6 +10,7 @@ add_compile_options(-Wno-unused-parameter)
 
 # Initialise pico_sdk from installed location
 # (note this can come from environment, CMake cache etc)
+set(PICO_SDK_FETCH_FROM_GIT on)
 
 # == DO NOT EDIT THE FOLLOWING LINES for the Raspberry Pi Pico VS Code Extension to work ==
 if(WIN32)
@@ -64,4 +65,3 @@ pico_add_extra_outputs(debugger)
 
 
 target_include_directories(debugger PUBLIC ${CMAKE_SOURCE_DIR}/inc)
-

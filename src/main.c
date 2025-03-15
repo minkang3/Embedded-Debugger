@@ -42,6 +42,8 @@ Command commands[] = {
     { "load",     .has_args = 1, .single_char = 0, .func_ptr.arg_func = load_file_and_run },
     { "set",      .has_args = 1, .single_char = 0, .func_ptr.arg_func = interface_set_mem },
     { "read",     .has_args = 1, .single_char = 0, .func_ptr.arg_func = interface_read_mem },
+    { "x",        .has_args = 1, .single_char = 0, .func_ptr.arg_func = interface_read_mem },
+    // TODO: Add info command, info reg should print all register values
 };
 
 void parse_cmd(char** args, uint8_t num_args) {

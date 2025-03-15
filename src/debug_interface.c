@@ -321,6 +321,117 @@ uint8_t read_mem(uint32_t address, uint32_t* data) {
     delay();
 }
 
+void to_uppercase(char* str) {
+    while (*str != '\0') {
+        if ('a' <= *str && *str <= 'z') {
+            *str -= 'a' - 'A';
+        }
+        str++;
+    }
+}
+
+int32_t str_to_int(char* str) {
+    int ret = 0;
+    while (*str != '\0') {
+        if (!('0' <= *str && *str <= '9'))
+            return -1;
+        ret *= 10;
+        ret += *str - '0';
+        ++str;
+    }
+    return ret;
+}
+
+/*
+ * @brief Parse a string like "$r5" into the REGSEL val for DCRSR
+ * 
+ * @param reg_str c-string in the format of "$r0" or "$pc"
+ *
+ * @return the REGSEL val or negative value for fail
+ */
+int8_t parse_reg_str_to_DCRSR_REGSEL(char* reg_str) {
+    int8_t ret;
+    uint8_t len = strlen(reg_str);
+
+    if (len < 3) {
+        printf("Unknown register\n");
+        return -1;
+    }
+
+    reg_str++; // Get rid of first character '$'
+
+    to_uppercase(reg_str);
+    if (reg_str[0] == 'R' && '0' <= reg_str[1] && reg_str[1] <= '9') {
+        int32_t i = str_to_int(reg_str + 1);
+        if (i < 0 || i > 15) {
+            printf("Register not valid or not within bounds, must be within 0 to 15\n");
+            return -1;
+        }
+        ret = i;
+    } else if (reg_str[0] == 'S' && '0' <= reg_str[1] && reg_str[1] <= '9') {
+        int32_t i = str_to_int(reg_str + 1);
+        if (i < 0 || i > 31) {
+            printf("Register not valid or not within bounds, must be within 0 to 31\n");
+            return -1;
+        }
+        ret = i;
+    } else {
+        struct name_to_val {
+            char* name;
+            uint8_t val;
+        };
+        struct name_to_val ntv_arr[] = {
+            { "SP",        0x0D },
+            { "LR",        0x0E },
+            { "PC",        0x0F },
+            { "XPSR",      0x10 },
+            { "MSP",       0x11 },
+            { "PSP",       0x12 },
+            { "CONTROL",   0x14 },
+            { "FAULTMASK", 0x14 },
+            { "BASEPRI",   0x14 },
+            { "PRIMASK",   0x14 },
+            { "FPCSR",     0x21 },
+        };
+
+        ret = 0;
+        for (int i = 0; i < sizeof(ntv_arr) / sizeof(struct name_to_val); ++i) {
+            if (strcmp(reg_str, ntv_arr[i].name) == 0) {
+                ret = ntv_arr[i].val;
+                break;
+            }
+        }
+        if (ret == 0) {
+            printf("Unknown register\n");
+            return -1;
+        }
+    }
+    return ret;
+}
+
+/*
+ * @brief Receive a string like "$r5" and return the value of the specified 
+ * register
+ *
+ * @param reg_str c-string in the format of "$r0" or "$pc"
+ *
+ * @return 0 for success, 1 for unknown register
+ */
+uint8_t read_register(char* reg_str, uint32_t* data) {
+    int8_t ack = 0;
+    int8_t regsel = parse_reg_str_to_DCRSR_REGSEL(reg_str);
+    if (regsel < 0) {
+        return 1;
+    }
+
+    ack = set_mem(CORE_DCRSR, regsel);
+    CHECK_ACK_RT("Failed to write regsel");
+    ack = read_mem(CORE_DCRDR, data);
+    CHECK_ACK_RT("Failed to read register");
+
+    return 0;
+}
+
 uint8_t interface_read_mem(char** args, uint8_t num_args) {
     uint32_t addr, val;
     int err = 0;
@@ -329,11 +440,22 @@ uint8_t interface_read_mem(char** args, uint8_t num_args) {
         printf("read <address>\n");
         return 1;
     }
-    err += parse_str_to_hex(args[1], &addr);
-    if (err) {
-        printf("Incorrect format. Address should be in hex format like 0x12341234\n");
-        return 1;
+    if (args[1][0] == '$') {
+        err += read_register(args[1], &val);
+        if (err) {
+            printf("Error in read_register\n");
+            return 1;
+        }
+        printf("%s: 0x%.8x\n", args[1] + 1, val);
+    } else {
+        err += parse_str_to_hex(args[1], &addr);
+        if (err) {
+            printf("Incorrect format. Address should be in hex format like 0x12341234\n");
+            return 1;
+        }
+        read_mem(addr, &val);
+        printf("0x%.8x: 0x%.8x\n", addr, val);
     }
-    read_mem(addr, &val);
-    printf("0x%.8x: 0x%.8x\n", addr, val);
 }
+
+// TODO: Refactor all above helping functions into different files
